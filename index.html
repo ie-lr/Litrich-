@@ -45,7 +45,7 @@ nav a{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}nav a
 <div id="sx" hidden><label>Full name</label><input name="nm"><label>Email</label><input name="em" type="email"><label>Setup code</label><input name="cd" autocomplete="off"></div><br><button id="lb" style="width:100%">Sign in</button><div id="le"></div><div style="font-size:11px;color:#6b7690;margin-top:6px">New members are added by the administrator.</div></form></div></div>
 <div id="app" hidden><nav id="nv"></nav><main><div id="sb"><input id="q" placeholder="Search goals, income, expenses, events, people" oninput="S.q=this.value;view()"></div><div id="vw"></div></main></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbyMR3z8vCn_Yhxm4p5ACYlojWTpnbjDbqnzNQPBVrwl96xW4VQtKvGgbIxusaMWSwMO/exec';
+const API='https://script.google.com/macros/s/AKfycbz5zx1d1kz6eeQ-ZTtgTZp7Kj4SU7WEvCFbRkYMe3YONRQAdJV0zt0bo-bt_akuFHkB/exec';
 const ACCTS=['Regular Saving','Emergency','LITRICH Business','Health & Education','Projects'];
 const CATS=['Food','Health','Education','Transport','Housing','Business','Other'];
 const $=s=>document.querySelector(s);
@@ -92,12 +92,12 @@ function chk(){const g=D().goals.find(g=>status(g)==='Achieved'&&!g.done);if(g){
 
 function modal(h){const m=document.createElement('div');m.className='m';m.innerHTML='<div>'+h+'</div>';document.body.appendChild(m)}
 const cl=()=>document.querySelectorAll('.m').forEach(e=>e.remove());
-function form(t,id){const c=F[t];if(t==='accounts')id=ACCTS[id];
+function openForm(t,id){const c=F[t];if(t==='accounts')id=ACCTS[id];
 const r=(id&&D()[t].find(x=>x.id===id))||(t==='accounts'?{id}:{});
 const fld=([k,l,ty,o])=>{const v=r[k]!=null?r[k]:(ty==='date'?today():ty==='month'?mo():'');let h;
 if(ty==='sel'||ty==='acct'||ty==='goal'){const L=ty==='acct'?ACCTS:ty==='goal'?[['','None'],...D().goals.map(g=>[g.id,g.statement])]:o;
 h=`<select name="${k}">${L.map(x=>{const a=Array.isArray(x)?x:[x,x];return `<option value="${E(a[0])}" ${a[0]===v?'selected':''}>${E(a[1])}</option>`}).join('')}</select>`}
-else h=`<input name="${k}" type="${ty||'text'}" ${ty==='number'?'step="any"':''} value="${E(v)}" ${ty==='number'||!ty?'required':''}>`;
+else h=`<input name="${k}" type="${ty||'text'}" ${ty==='number'?'step="any"':''} value="${E(v)}" ${ty==='number'||/^(statement|purpose|title)$/.test(k)?'required':''}>`;
 return `<label>${l}</label>${h}`};
 modal(`<h2>${id?'Edit':'Add'} ${t==='accounts'?id:t.replace(/s$/,'')}</h2><form id="f">${c.f.map(fld).join('')}<br><button>Save</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
 $('#f').onsubmit=e=>{e.preventDefault();const o={...r};c.f.forEach(([k])=>o[k]=e.target[k].value);
@@ -107,9 +107,9 @@ if(t==='income'||t==='expenses'){const g=D().goals.find(x=>x.id===o.goal);if(g)o
 cl();save(t,o)}}
 
 // views
-const hd=(h,t)=>`<div class="top"><h2>${h}</h2>${t?`<button onclick="form('${t}')">+</button>`:''}</div>`;
+const hd=(h,t)=>`<div class="top"><h2>${h}</h2>${t?`<button onclick="openForm('${t}')">+</button>`:''}</div>`;
 const tb=(h,rows)=>`<div class="card w"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${h.length}">No records</td></tr>`}</table></div>`;
-const act=(t,id)=>`<button class="s" onclick="form('${t}','${id}')">Edit</button> <button class="x" onclick="rm('${t}','${id}')">Delete</button>`;
+const act=(t,id)=>`<button class="s" onclick="openForm('${t}','${id}')">Edit</button> <button class="x" onclick="rm('${t}','${id}')">Delete</button>`;
 const V={
 dash(){const m=mo(),I=sum(D().income.filter(r=>inM(r,m))),X=sum(D().expenses.filter(r=>inM(r,m))),A=D().goals.filter(g=>status(g)==='Achieved').length;
 return hd('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total balance</div><div class="v">${M(ACCTS.reduce((s,a)=>s+bal(a),0))}</div></div><div class="card"><div class="k">Income this month</div><div class="v">${M(I)}</div></div><div class="card"><div class="k">Expenses this month</div><div class="v">${M(X)}</div></div><div class="card"><div class="k">Goals achieved</div><div class="v">${A} / ${D().goals.length}</div></div></div>`+charts()+unmet()+
@@ -117,17 +117,17 @@ return hd('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total
 tb(['Date','Purpose','Amount','By'],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,5).map(r=>[r.date,E(r.purpose),M(r.amount),U(r.user)]))},
 budget(){const rows=CATS.map(c=>{const b=D().budgets.find(x=>x.id===bm+'_'+c),p=n(b&&b.amount),s=sum(D().expenses.filter(r=>inM(r,bm)&&r.category===c)),pc=p?Math.min(100,s/p*100):0;
 return [c,M(p),M(s),`<span style="color:${p-s<0?'var(--r)':'inherit'}">${M(p-s)}</span><div class="bar"><i style="width:${pc}%;background:${s>p?'var(--r)':'var(--b)'}"></i></div>`,b?`<button class="x" onclick="rm('budgets','${b.id}')">Delete</button>`:'']});
-return `<div class="top"><h2>Monthly Budget</h2><span><input type="month" value="${bm}" onchange="bm=this.value;render()"> <button onclick="form('budgets')">+</button></span></div>`+tb(['Category','Planned','Spent','Remaining',''],rows)},
+return `<div class="top"><h2>Monthly Budget</h2><span><input type="month" value="${bm}" onchange="bm=this.value;render()"> <button onclick="openForm('budgets')">+</button></span></div>`+tb(['Category','Planned','Spent','Remaining',''],rows)},
 goals(){return hd('Goals','goals')+tb(['Goal','Status','Budget','Achieved','Balance','Source','Funds account','Deadline',''],D().goals.map(g=>[E(g.statement),tag(status(g)),M(g.target),M(raised(g)),M(Math.max(0,n(g.target)-raised(g))),E(g.source),E(g.account),g.deadline||'',act('goals',g.id)]))},
 cal(){const[y,m]=cm.split('-').map(Number),f=new Date(y,m-1,1).getDay(),dn=new Date(y,m,0).getDate();
 const ev=[...D().events.map(e=>({d:e.date,t:e.title})),...D().goals.filter(g=>g.deadline).map(g=>({d:g.deadline,t:'Deadline: '+g.statement}))];
 let c=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="h">${d}</div>`).join('')+'<div></div>'.repeat(f);
 for(let d=1;d<=dn;d++){const ds=cm+'-'+String(d).padStart(2,'0');c+=`<div><b>${d}</b>${ev.filter(x=>x.d===ds).map(x=>`<div class="ev">${E(x.t)}</div>`).join('')}</div>`}
-return `<div class="top"><h2>Calendar</h2><span><button class="s" onclick="cmv(-1)">Prev</button> ${cm} <button class="s" onclick="cmv(1)">Next</button> <button onclick="form('events')">+</button></span></div><div class="card"><div class="cg">${c}</div></div>`+
+return `<div class="top"><h2>Calendar</h2><span><button class="s" onclick="cmv(-1)">Prev</button> ${cm} <button class="s" onclick="cmv(1)">Next</button> <button onclick="openForm('events')">+</button></span></div><div class="card"><div class="cg">${c}</div></div>`+
 tb(['Date','Event','Note',''],D().events.filter(e=>String(e.date).slice(0,7)===cm).sort((a,b)=>a.date>b.date?1:-1).map(e=>[e.date,E(e.title),E(e.note),act('events',e.id)]))},
 expenses(){return hd('Expenses','expenses')+tb(['Date','Purpose','Category','Amount','Source account','Tied goal','Recorded by',''],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.purpose),E(r.category),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('expenses',r.id)]))},
 income(){return hd('Income','income')+tb(['Date','Source','Amount','Account','Tied goal','Recorded by',''],D().income.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.source),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('income',r.id)]))},
-accounts(){return hd('Accounts')+`<div class="grid">${ACCTS.map((a,i)=>`<div class="card"><div class="k">${a}</div><div class="v">${M(bal(a))}</div><small>Deposits ${M(sum(D().income.filter(r=>r.account===a)))} | Spent ${M(sum(D().expenses.filter(r=>r.account===a)))}</small><br><br><button class="s" onclick="form('accounts',${i})">Opening balance</button></div>`).join('')}</div>`},
+accounts(){return hd('Accounts')+`<div class="grid">${ACCTS.map((a,i)=>`<div class="card"><div class="k">${a}</div><div class="v">${M(bal(a))}</div><small>Deposits ${M(sum(D().income.filter(r=>r.account===a)))} | Spent ${M(sum(D().expenses.filter(r=>r.account===a)))}</small><br><br><button class="s" onclick="openForm('accounts',${i})">Opening balance</button></div>`).join('')}</div>`},
 loc(){const L=D().locations,s=L.find(l=>l.id===sel);
 return `<div class="top"><h2>Location Tracker</h2><button class="${S.trk?'x':''}" onclick="track(${S.trk?0:1})">${S.trk?'Stop sharing':'Share my location'}</button></div>`+
 (s?`<div class="card"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${n(s.lng)-.01},${n(s.lat)-.01},${n(s.lng)+.01},${n(s.lat)+.01}&marker=${s.lat},${s.lng}"></iframe></div>`:'')+
