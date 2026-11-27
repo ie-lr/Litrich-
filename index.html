@@ -5,6 +5,7 @@
 <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f2e5e">
 <link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
+[hidden]{display:none!important}
 :root{--b:#1e4f9c;--d:#0f2e5e;--p:#fbe3d6;--r:#c8362f;--g:#f4f6fa;--t:#1d2433}
 *{box-sizing:border-box}body{margin:0;font:13px/1.4 "Segoe UI",Arial,sans-serif;color:var(--t);background:var(--g)}
 #app{display:flex;height:100vh}
@@ -44,7 +45,7 @@ nav a{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}nav a
 <div hidden><label>Full name</label><input name="nm"></div><br><button style="width:100%">Continue</button><div id="le"></div></form></div></div>
 <div id="app" hidden><nav id="nv"></nav><main><div id="sb"><input id="q" placeholder="Search goals, income, expenses, events, people" oninput="S.q=this.value;view()"></div><div id="vw"></div></main></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbz5zx1d1kz6eeQ-ZTtgTZp7Kj4SU7WEvCFbRkYMe3YONRQAdJV0zt0bo-bt_akuFHkB/exec';
+const API='PASTE_WEB_APP_URL_HERE';
 const ACCTS=['Regular Saving','Emergency','LITRICH Business','Health & Education','Projects'];
 const CATS=['Food','Health','Education','Transport','Housing','Business','Other'];
 const $=s=>document.querySelector(s);
@@ -106,34 +107,34 @@ if(t==='income'||t==='expenses'){const g=D().goals.find(x=>x.id===o.goal);if(g)o
 cl();save(t,o)}}
 
 // views
-const top=(h,t)=>`<div class="top"><h2>${h}</h2>${t?`<button onclick="form('${t}')">+</button>`:''}</div>`;
+const hd=(h,t)=>`<div class="top"><h2>${h}</h2>${t?`<button onclick="form('${t}')">+</button>`:''}</div>`;
 const tb=(h,rows)=>`<div class="card w"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${h.length}">No records</td></tr>`}</table></div>`;
 const act=(t,id)=>`<button class="s" onclick="form('${t}','${id}')">Edit</button> <button class="x" onclick="rm('${t}','${id}')">Delete</button>`;
 const V={
 dash(){const m=mo(),I=sum(D().income.filter(r=>inM(r,m))),X=sum(D().expenses.filter(r=>inM(r,m))),A=D().goals.filter(g=>status(g)==='Achieved').length;
-return top('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total balance</div><div class="v">${M(ACCTS.reduce((s,a)=>s+bal(a),0))}</div></div><div class="card"><div class="k">Income this month</div><div class="v">${M(I)}</div></div><div class="card"><div class="k">Expenses this month</div><div class="v">${M(X)}</div></div><div class="card"><div class="k">Goals achieved</div><div class="v">${A} / ${D().goals.length}</div></div></div>`+charts()+unmet()+
+return hd('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total balance</div><div class="v">${M(ACCTS.reduce((s,a)=>s+bal(a),0))}</div></div><div class="card"><div class="k">Income this month</div><div class="v">${M(I)}</div></div><div class="card"><div class="k">Expenses this month</div><div class="v">${M(X)}</div></div><div class="card"><div class="k">Goals achieved</div><div class="v">${A} / ${D().goals.length}</div></div></div>`+charts()+unmet()+
 `<div class="card"><b>Goal progress</b>${D().goals.slice(0,6).map(g=>{const p=n(g.target)?Math.min(100,raised(g)/n(g.target)*100):0;return `<div style="margin-top:8px">${E(g.statement)} <small>${M(raised(g))} of ${M(g.target)}</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')||'No goals yet'}</div>`+
 tb(['Date','Purpose','Amount','By'],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,5).map(r=>[r.date,E(r.purpose),M(r.amount),U(r.user)]))},
 budget(){const rows=CATS.map(c=>{const b=D().budgets.find(x=>x.id===bm+'_'+c),p=n(b&&b.amount),s=sum(D().expenses.filter(r=>inM(r,bm)&&r.category===c)),pc=p?Math.min(100,s/p*100):0;
 return [c,M(p),M(s),`<span style="color:${p-s<0?'var(--r)':'inherit'}">${M(p-s)}</span><div class="bar"><i style="width:${pc}%;background:${s>p?'var(--r)':'var(--b)'}"></i></div>`,b?`<button class="x" onclick="rm('budgets','${b.id}')">Delete</button>`:'']});
 return `<div class="top"><h2>Monthly Budget</h2><span><input type="month" value="${bm}" onchange="bm=this.value;render()"> <button onclick="form('budgets')">+</button></span></div>`+tb(['Category','Planned','Spent','Remaining',''],rows)},
-goals(){return top('Goals','goals')+tb(['Goal','Status','Budget','Achieved','Balance','Source','Funds account','Deadline',''],D().goals.map(g=>[E(g.statement),tag(status(g)),M(g.target),M(raised(g)),M(Math.max(0,n(g.target)-raised(g))),E(g.source),E(g.account),g.deadline||'',act('goals',g.id)]))},
+goals(){return hd('Goals','goals')+tb(['Goal','Status','Budget','Achieved','Balance','Source','Funds account','Deadline',''],D().goals.map(g=>[E(g.statement),tag(status(g)),M(g.target),M(raised(g)),M(Math.max(0,n(g.target)-raised(g))),E(g.source),E(g.account),g.deadline||'',act('goals',g.id)]))},
 cal(){const[y,m]=cm.split('-').map(Number),f=new Date(y,m-1,1).getDay(),dn=new Date(y,m,0).getDate();
 const ev=[...D().events.map(e=>({d:e.date,t:e.title})),...D().goals.filter(g=>g.deadline).map(g=>({d:g.deadline,t:'Deadline: '+g.statement}))];
 let c=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="h">${d}</div>`).join('')+'<div></div>'.repeat(f);
 for(let d=1;d<=dn;d++){const ds=cm+'-'+String(d).padStart(2,'0');c+=`<div><b>${d}</b>${ev.filter(x=>x.d===ds).map(x=>`<div class="ev">${E(x.t)}</div>`).join('')}</div>`}
 return `<div class="top"><h2>Calendar</h2><span><button class="s" onclick="cmv(-1)">Prev</button> ${cm} <button class="s" onclick="cmv(1)">Next</button> <button onclick="form('events')">+</button></span></div><div class="card"><div class="cg">${c}</div></div>`+
 tb(['Date','Event','Note',''],D().events.filter(e=>String(e.date).slice(0,7)===cm).sort((a,b)=>a.date>b.date?1:-1).map(e=>[e.date,E(e.title),E(e.note),act('events',e.id)]))},
-expenses(){return top('Expenses','expenses')+tb(['Date','Purpose','Category','Amount','Source account','Tied goal','Recorded by',''],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.purpose),E(r.category),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('expenses',r.id)]))},
-income(){return top('Income','income')+tb(['Date','Source','Amount','Account','Tied goal','Recorded by',''],D().income.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.source),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('income',r.id)]))},
-accounts(){return top('Accounts')+`<div class="grid">${ACCTS.map((a,i)=>`<div class="card"><div class="k">${a}</div><div class="v">${M(bal(a))}</div><small>Deposits ${M(sum(D().income.filter(r=>r.account===a)))} | Spent ${M(sum(D().expenses.filter(r=>r.account===a)))}</small><br><br><button class="s" onclick="form('accounts',${i})">Opening balance</button></div>`).join('')}</div>`},
+expenses(){return hd('Expenses','expenses')+tb(['Date','Purpose','Category','Amount','Source account','Tied goal','Recorded by',''],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.purpose),E(r.category),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('expenses',r.id)]))},
+income(){return hd('Income','income')+tb(['Date','Source','Amount','Account','Tied goal','Recorded by',''],D().income.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.source),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('income',r.id)]))},
+accounts(){return hd('Accounts')+`<div class="grid">${ACCTS.map((a,i)=>`<div class="card"><div class="k">${a}</div><div class="v">${M(bal(a))}</div><small>Deposits ${M(sum(D().income.filter(r=>r.account===a)))} | Spent ${M(sum(D().expenses.filter(r=>r.account===a)))}</small><br><br><button class="s" onclick="form('accounts',${i})">Opening balance</button></div>`).join('')}</div>`},
 loc(){const L=D().locations,s=L.find(l=>l.id===sel);
 return `<div class="top"><h2>Location Tracker</h2><button class="${S.trk?'x':''}" onclick="track(${S.trk?0:1})">${S.trk?'Stop sharing':'Share my location'}</button></div>`+
 (s?`<div class="card"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${n(s.lng)-.01},${n(s.lat)-.01},${n(s.lng)+.01},${n(s.lat)+.01}&marker=${s.lat},${s.lng}"></iframe></div>`:'')+
 tb(['User','Last seen','Coordinates',''],L.map(l=>[U(l.user),new Date(l.time).toLocaleString(),n(l.lat).toFixed(4)+', '+n(l.lng).toFixed(4),`<button class="s" onclick="sel='${l.id}';render()">View</button>`]))},
-rep(){return top('Monthly Report')+`<div class="card">A report is generated automatically on the last day of every month. Download any month:<br><br><input id="rm" type="month" value="${mo()}" style="width:160px"> <button onclick="dl()">Download PDF</button></div>`},
-users(){if(S.user.role!=='admin')return top('Users')+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]));
-return top('Users')+'<div class="top"><button onclick="uform()">+ Add user</button></div>'+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]))}};
+rep(){return hd('Monthly Report')+`<div class="card">A report is generated automatically on the last day of every month. Download any month:<br><br><input id="rm" type="month" value="${mo()}" style="width:160px"> <button onclick="dl()">Download PDF</button></div>`},
+users(){if(S.user.role!=='admin')return hd('Users')+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]));
+return hd('Users')+'<div class="top"><button onclick="uform()">+ Add user</button></div>'+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]))}};
 const cmv=d=>{const[y,m]=cm.split('-').map(Number),x=new Date(y,m-1+d,1);cm=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');render()};
 function uform(){modal(`<h2>Add user</h2><form id="uf"><label>Full name</label><input name="name" required><label>Username</label><input name="username" required><label>Email</label><input name="email" type="email"><label>Password (8+ characters)</label><input name="password" type="password" minlength="8" required><label>Role</label><select name="role"><option value="member">Member</option><option value="admin">Admin</option></select><br><button>Create</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
 $('#uf').onsubmit=async e=>{e.preventDefault();const f=e.target;try{await call('addUser',{email:f.email.value,name:f.name.value,username:f.username.value,password:f.password.value,role:f.role.value});cl();sync()}catch(x){alert(x.message)}}}
@@ -165,7 +166,7 @@ $('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,fl=f.ph.files[0]
 const go=t=>{S.tab=t;S.q='';$('#q').value='';render()};
 V.search=()=>{const q=S.q.toLowerCase(),h=o=>Object.values(o).join(' ').toLowerCase().includes(q);
 const sec=(t,l,a,f)=>a.length?`<div class="card"><b>${l}</b> (${a.length})${a.slice(0,8).map(r=>`<div style="padding:5px 0;cursor:pointer" onclick="go('${t}')">${f(r)}</div>`).join('')}</div>`:'';
-return top('Search results')+sec('goals','Goals',D().goals.filter(h),g=>E(g.statement)+' '+tag(status(g)))+sec('income','Income',D().income.filter(h),r=>r.date+' '+E(r.source)+' '+M(r.amount))+sec('expenses','Expenses',D().expenses.filter(h),r=>r.date+' '+E(r.purpose)+' '+M(r.amount))+sec('cal','Events',D().events.filter(h),e=>e.date+' '+E(e.title))+sec('users','People',D().users.filter(u=>(u.name+u.id).toLowerCase().includes(q)),u=>U(u.id))||''}
+return hd('Search results')+sec('goals','Goals',D().goals.filter(h),g=>E(g.statement)+' '+tag(status(g)))+sec('income','Income',D().income.filter(h),r=>r.date+' '+E(r.source)+' '+M(r.amount))+sec('expenses','Expenses',D().expenses.filter(h),r=>r.date+' '+E(r.purpose)+' '+M(r.amount))+sec('cal','Events',D().events.filter(h),e=>e.date+' '+E(e.title))+sec('users','People',D().users.filter(u=>(u.name+u.id).toLowerCase().includes(q)),u=>U(u.id))||''}
 const view=()=>{$('#vw').innerHTML=(S.q?V.search:V[S.tab])()};
 function render(){$('#nv').innerHTML=`<div class="logo"><img src="logo.png" alt="LITRICH"></div>`+TABS.map(([k,l])=>`<a class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render()"><svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>${l}</a>`).join('')+`<a onclick="pform()">${av(S.user.username)}${E(nm(S.user.username))}</a><a onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 3H4v18h5M16 8l4 4-4 4M20 12H9"/></svg>Sign out</a><div id="st">${navigator.onLine?'Online':'Offline'}${S.Q.length?' | '+S.Q.length+' pending':''}</div>`;
 view()}
