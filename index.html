@@ -47,20 +47,22 @@ nav a{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}nav a
 <script>
 const API='https://script.google.com/macros/s/AKfycbz5zx1d1kz6eeQ-ZTtgTZp7Kj4SU7WEvCFbRkYMe3YONRQAdJV0zt0bo-bt_akuFHkB/exec';
 const ACCTS=['Regular Saving','Emergency','LITRICH Business','Health & Education','Projects'];
-const CATS=['Food','Health','Education','Transport','Housing','Business','Other'];
+const CATS=['Food','Health','Education','Transport','Housing','Business','Debt','Other'];
 const $=s=>document.querySelector(s);
 const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const IC={dash:'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',budget:'M12 3a9 9 0 1 0 9 9h-9z',goals:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',cal:'M4 5h16v15H4zM4 10h16M8 3v4M16 3v4',expenses:'M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H7',income:'M12 19V5M5 12l7-7 7 7',accounts:'M3 7h18v12H3zM3 7l3-4h12l3 4',loc:'M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4',rep:'M6 3h9l4 4v14H6zM9 12h7M9 16h7',users:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0'};
-const TABS=[['dash','Dashboard'],['budget','Monthly Budget'],['goals','Goals'],['cal','Calendar'],['expenses','Expenses'],['income','Income'],['accounts','Accounts'],['loc','Location'],['rep','Monthly Report'],['users','Users']];
+const IC={debt:'M3 6h18v12H3zM3 10h18',credit:'M4 4h16v16H4zM12 8v8M8 12h8',dash:'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',budget:'M12 3a9 9 0 1 0 9 9h-9z',goals:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',cal:'M4 5h16v15H4zM4 10h16M8 3v4M16 3v4',expenses:'M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H7',income:'M12 19V5M5 12l7-7 7 7',accounts:'M3 7h18v12H3zM3 7l3-4h12l3 4',loc:'M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4',rep:'M6 3h9l4 4v14H6zM9 12h7M9 16h7',users:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0'};
+const TABS=[['dash','Dashboard'],['budget','Monthly Budget'],['goals','Goals'],['cal','Calendar'],['expenses','Expenses'],['income','Income'],['debt','Debt'],['credit','Credit'],['accounts','Accounts'],['loc','Location'],['rep','Monthly Report'],['users','Users']];
 const F={
 goals:{f:[['statement','Goal'],['category','Category','sel',['General','Health','Education','Business','Project','Emergency']],['target','Budget','number'],['account','Funds account','acct'],['source','Source'],['deadline','Deadline','date']]},
-income:{f:[['amount','Amount','number'],['source','Source'],['account','Account','acct'],['goal','Tied goal','goal'],['date','Date','date']]},
-expenses:{f:[['amount','Amount','number'],['purpose','Purpose'],['category','Category','sel',CATS],['account','Source account','acct'],['goal','Tied goal','goal'],['date','Date','date']]},
+income:{f:[['amount','Amount','number'],['source','Source'],['account','Account','acct'],['goal','Tied goal','goal'],['debt','Tied debt (borrowed)','debt'],['date','Date','date']]},
+expenses:{f:[['amount','Amount','number'],['purpose','Purpose'],['category','Category','sel',CATS],['account','Source account','acct'],['goal','Tied goal','goal'],['debt','Tied debt (repayment)','debt'],['date','Date','date']]},
+debts:{f:[['creditor','Creditor'],['date','Date','date'],['elim','Elimination date','date'],['amount','Amount owed','number']]},
+credits:{f:[['name','Creditor name'],['contact','Contact'],['amount','Amount','number'],['deadline','Deadline','date']]},
 budgets:{f:[['month','Month','month'],['category','Category','sel',CATS],['amount','Planned','number']]},
 events:{f:[['title','Event'],['date','Date','date'],['note','Note']]},
 accounts:{f:[['opening','Opening balance','number']]}};
 const GA={General:'Regular Saving',Health:'Health & Education',Education:'Health & Education',Business:'LITRICH Business',Project:'Projects',Emergency:'Emergency'};
-const EMPTY=()=>({goals:[],income:[],expenses:[],budgets:[],events:[],accounts:[],locations:[],users:[]});
+const EMPTY=()=>({debts:[],credits:[],goals:[],income:[],expenses:[],budgets:[],events:[],accounts:[],locations:[],users:[]});
 let S={tab:'dash',D:EMPTY(),Q:[],trk:0},busy=0,bm,cm,sel,wid;
 const mo=()=>new Date().toISOString().slice(0,7),today=()=>new Date().toISOString().slice(0,10);
 bm=cm=mo();
@@ -83,7 +85,7 @@ const persist=()=>idb.set('s',{tok:S.tok,user:S.user,D:S.D,Q:S.Q});
 
 async function call(a,x){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,token:S.tok,...x})});let j;try{j=JSON.parse(await r.text())}catch(e){throw new Error('Backend not reachable. Check the Web App URL (ends in /exec) and that access is set to Anyone')}if(!j.ok)throw new Error(j.error);return j}
 async function sync(){if(!navigator.onLine||!S.tok||busy)return;busy=1;st('Syncing');
-try{const ops=S.Q.slice();const r=await call('sync',{ops});S.Q=S.Q.slice(ops.length);S.D=r.data;await persist();st('Synced');render();chk();rmd()}
+try{const ops=S.Q.slice();const r=await call('sync',{ops});S.Q=S.Q.slice(ops.length);S.D={...EMPTY(),...r.data};fix(S.D);applyQ();await persist();st('Synced');render();chk();rmd()}
 catch(e){if(/Auth|Expired/.test(e.message))return logout();st('Pending changes: '+S.Q.length)}
 busy=0;if(S.Q.length&&navigator.onLine)setTimeout(sync,3000)}
 async function save(t,row){row.id=row.id||uid();row.user=row.user||S.user.username;const a=D()[t],i=a.findIndex(r=>r.id===row.id);i<0?a.push(row):a[i]=row;S.Q.push({t,o:'s',row});await persist();render();sync()}
@@ -95,16 +97,16 @@ const cl=()=>document.querySelectorAll('.m').forEach(e=>e.remove());
 function openForm(t,id){const c=F[t];if(t==='accounts')id=ACCTS[id];
 const r=(id&&D()[t].find(x=>x.id===id))||(t==='accounts'?{id}:{});
 const fld=([k,l,ty,o])=>{const v=r[k]!=null?r[k]:(ty==='date'?today():ty==='month'?mo():'');let h;
-if(ty==='sel'||ty==='acct'||ty==='goal'){const L=ty==='acct'?ACCTS:ty==='goal'?[['','None'],...D().goals.map(g=>[g.id,g.statement])]:o;
+if(ty==='sel'||ty==='acct'||ty==='goal'||ty==='debt'){const L=ty==='acct'?ACCTS:ty==='debt'?[['','None'],...D().debts.map(g=>[g.id,g.creditor])]:ty==='goal'?[['','None'],...D().goals.map(g=>[g.id,g.statement])]:o;
 h=`<select name="${k}">${L.map(x=>{const a=Array.isArray(x)?x:[x,x];return `<option value="${E(a[0])}" ${a[0]===v?'selected':''}>${E(a[1])}</option>`}).join('')}</select>`}
-else h=`<input name="${k}" type="${ty||'text'}" ${ty==='number'?'step="any"':''} value="${E(v)}" ${ty==='number'||/^(statement|purpose|title)$/.test(k)?'required':''}>`;
+else h=`<input name="${k}" type="${ty||'text'}" ${ty==='number'?'step="any"':''} value="${E(v)}" ${ty==='number'||/^(statement|purpose|title|creditor|name)$/.test(k)?'required':''}>`;
 return `<label>${l}</label>${h}`};
 modal(`<h2>${id?'Edit':'Add'} ${t==='accounts'?id:t.replace(/s$/,'')}</h2><form id="f">${c.f.map(fld).join('')}<br><button>Save</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
 $('#f').onsubmit=e=>{e.preventDefault();const o={...r};c.f.forEach(([k])=>o[k]=e.target[k].value);
 if(t==='accounts')o.id=id;if(t==='budgets')o.id=o.month+'_'+o.category;
 if(t==='goals'&&GA[o.category])o.account=GA[o.category];
 if(t==='income'||t==='expenses'){const g=D().goals.find(x=>x.id===o.goal);if(g)o.account=g.account||o.account}
-cl();save(t,o)}}
+if(t==='events'&&o.date)cm=o.date.slice(0,7);cl();save(t,o)}}
 
 // views
 const hd=(h,t)=>`<div class="top"><h2>${h}</h2>${t?`<button onclick="openForm('${t}')">+</button>`:''}</div>`;
@@ -112,21 +114,24 @@ const tb=(h,rows)=>`<div class="card w"><table><tr>${h.map(x=>`<th>${x}</th>`).j
 const act=(t,id)=>`<button class="s" onclick="openForm('${t}','${id}')">Edit</button> <button class="x" onclick="rm('${t}','${id}')">Delete</button>`;
 const V={
 dash(){const m=mo(),I=sum(D().income.filter(r=>inM(r,m))),X=sum(D().expenses.filter(r=>inM(r,m))),A=D().goals.filter(g=>status(g)==='Achieved').length;
-return hd('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total balance</div><div class="v">${M(ACCTS.reduce((s,a)=>s+bal(a),0))}</div></div><div class="card"><div class="k">Income this month</div><div class="v">${M(I)}</div></div><div class="card"><div class="k">Expenses this month</div><div class="v">${M(X)}</div></div><div class="card"><div class="k">Goals achieved</div><div class="v">${A} / ${D().goals.length}</div></div></div>`+charts()+unmet()+
+return hd('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total balance</div><div class="v">${M(ACCTS.reduce((s,a)=>s+bal(a),0))}</div></div><div class="card"><div class="k">Income this month</div><div class="v">${M(I)}</div></div><div class="card"><div class="k">Expenses this month</div><div class="v">${M(X)}</div></div><div class="card"><div class="k">Goals achieved</div><div class="v">${A} / ${D().goals.length}</div></div><div class="card"><div class="k">Total debt</div><div class="v">${M(D().debts.reduce((s,d)=>s+Math.max(0,debtBal(d)),0))}</div></div><div class="card"><div class="k">Credit owed to us</div><div class="v">${M(sum(D().credits))}</div></div></div>`+charts()+unmet()+debtCard()+
 `<div class="card"><b>Goal progress</b>${D().goals.slice(0,6).map(g=>{const p=n(g.target)?Math.min(100,raised(g)/n(g.target)*100):0;return `<div style="margin-top:8px">${E(g.statement)} <small>${M(raised(g))} of ${M(g.target)}</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')||'No goals yet'}</div>`+
 tb(['Date','Purpose','Amount','By'],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,5).map(r=>[r.date,E(r.purpose),M(r.amount),U(r.user)]))},
-budget(){const rows=CATS.map(c=>{const b=D().budgets.find(x=>x.id===bm+'_'+c),p=n(b&&b.amount),s=sum(D().expenses.filter(r=>inM(r,bm)&&r.category===c)),pc=p?Math.min(100,s/p*100):0;
-return [c,M(p),M(s),`<span style="color:${p-s<0?'var(--r)':'inherit'}">${M(p-s)}</span><div class="bar"><i style="width:${pc}%;background:${s>p?'var(--r)':'var(--b)'}"></i></div>`,b?`<button class="x" onclick="rm('budgets','${b.id}')">Delete</button>`:'']});
-return `<div class="top"><h2>Monthly Budget</h2><span><input type="month" value="${bm}" onchange="bm=this.value;render()"> <button onclick="openForm('budgets')">+</button></span></div>`+tb(['Category','Planned','Spent','Remaining',''],rows)},
+budget(){const inc=sum(D().income.filter(r=>inM(r,bm))),ex=D().expenses.filter(r=>inM(r,bm)),sp=sum(ex),bl=D().budgets.filter(b=>String(b.id).startsWith(bm+'_')),pl=sum(bl);
+const cats=[...new Set([...CATS,...bl.map(b=>b.category),...ex.map(r=>r.category||'Other')])];
+const rows=cats.map(c=>{const b=bl.find(x=>x.category===c),p=n(b&&b.amount),s=sum(ex.filter(r=>(r.category||'Other')===c));if(!b&&!s)return 0;const pc=p?Math.min(100,s/p*100):100;
+return [c,M(p),M(s),`<span style="color:${p-s<0?'var(--r)':'inherit'}">${M(p-s)}</span><div class="bar"><i style="width:${pc}%;background:${s>p?'var(--r)':'var(--b)'}"></i></div>`,b?`<button class="x" onclick="rm('budgets','${b.id}')">Delete</button>`:'']}).filter(Boolean);
+const k=(l,v)=>`<div class="card"><div class="k">${l}</div><div class="v">${M(v)}</div></div>`;
+return `<div class="top"><h2>Monthly Budget</h2><span><input type="month" value="${bm}" onchange="bm=this.value;render()"> <button onclick="openForm('budgets')">+</button></span></div><div class="grid">${k('Income',inc)}${k('Planned',pl)}${k('Spent',sp)}${k('Left to spend',pl-sp)}${k('Net (income - spent)',inc-sp)}</div>`+tb(['Category','Planned','Spent','Remaining',''],rows)},
 goals(){return hd('Goals','goals')+tb(['Goal','Status','Budget','Achieved','Balance','Source','Funds account','Deadline',''],D().goals.map(g=>[E(g.statement),tag(status(g)),M(g.target),M(raised(g)),M(Math.max(0,n(g.target)-raised(g))),E(g.source),E(g.account),g.deadline||'',act('goals',g.id)]))},
 cal(){const[y,m]=cm.split('-').map(Number),f=new Date(y,m-1,1).getDay(),dn=new Date(y,m,0).getDate();
-const ev=[...D().events.map(e=>({d:e.date,t:e.title})),...D().goals.filter(g=>g.deadline).map(g=>({d:g.deadline,t:'Deadline: '+g.statement}))];
+const ev=[...D().events.map(e=>({d:e.date,t:e.title})),...D().goals.filter(g=>g.deadline).map(g=>({d:g.deadline,t:'Deadline: '+g.statement})),...D().debts.filter(d=>d.elim).map(d=>({d:d.elim,t:'Debt due: '+d.creditor})),...D().credits.filter(c=>c.deadline).map(c=>({d:c.deadline,t:'Credit due: '+c.name}))];
 let c=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="h">${d}</div>`).join('')+'<div></div>'.repeat(f);
 for(let d=1;d<=dn;d++){const ds=cm+'-'+String(d).padStart(2,'0');c+=`<div><b>${d}</b>${ev.filter(x=>x.d===ds).map(x=>`<div class="ev">${E(x.t)}</div>`).join('')}</div>`}
 return `<div class="top"><h2>Calendar</h2><span><button class="s" onclick="cmv(-1)">Prev</button> ${cm} <button class="s" onclick="cmv(1)">Next</button> <button onclick="openForm('events')">+</button></span></div><div class="card"><div class="cg">${c}</div></div>`+
 tb(['Date','Event','Note',''],D().events.filter(e=>String(e.date).slice(0,7)===cm).sort((a,b)=>a.date>b.date?1:-1).map(e=>[e.date,E(e.title),E(e.note),act('events',e.id)]))},
-expenses(){return hd('Expenses','expenses')+tb(['Date','Purpose','Category','Amount','Source account','Tied goal','Recorded by',''],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.purpose),E(r.category),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('expenses',r.id)]))},
-income(){return hd('Income','income')+tb(['Date','Source','Amount','Account','Tied goal','Recorded by',''],D().income.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.source),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('income',r.id)]))},
+expenses(){return hd('Expenses','expenses')+tb(['Date','Purpose','Category','Amount','Source account','Tied to','Recorded by',''],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.purpose),E(r.category),M(r.amount),E(r.account),E(gn(r.goal)||dn(r.debt)),U(r.user),act('expenses',r.id)]))},
+income(){return hd('Income','income')+tb(['Date','Source','Amount','Account','Tied to','Recorded by',''],D().income.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.source),M(r.amount),E(r.account),E(gn(r.goal)||dn(r.debt)),U(r.user),act('income',r.id)]))},
 accounts(){return hd('Accounts')+`<div class="grid">${ACCTS.map((a,i)=>`<div class="card"><div class="k">${a}</div><div class="v">${M(bal(a))}</div><small>Deposits ${M(sum(D().income.filter(r=>r.account===a)))} | Spent ${M(sum(D().expenses.filter(r=>r.account===a)))}</small><br><br><button class="s" onclick="openForm('accounts',${i})">Opening balance</button></div>`).join('')}</div>`},
 loc(){const L=D().locations,s=L.find(l=>l.id===sel);
 return `<div class="top"><h2>Location Tracker</h2><button class="${S.trk?'x':''}" onclick="track(${S.trk?0:1})">${S.trk?'Stop sharing':'Share my location'}</button></div>`+
@@ -152,7 +157,7 @@ return `<rect x="${x}" y="${110-h1}" width="16" height="${h1}" fill="#1e4f9c"/><
 function donut(a){const T=a.reduce((s,i)=>s+i[1],0)||1,C=2*Math.PI*40;let o=0;
 return `<svg class="c" viewBox="0 0 220 110"><g transform="rotate(-90 55 55)">${a.map((it,i)=>{const l=it[1]/T*C,s=`<circle cx="55" cy="55" r="40" fill="none" stroke="${PAL[i%7]}" stroke-width="18" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-o}"/>`;o+=l;return s}).join('')}</g>${a.map((it,i)=>`<rect x="125" y="${8+i*14}" width="8" height="8" fill="${PAL[i%7]}"/><text x="137" y="${15+i*14}" font-size="9" fill="#1d2433">${E(it[0])} ${Math.round(it[1]/T*100)}%</text>`).join('')}</svg>`}
 function charts(){const ms=[...Array(6)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-5+i);return d.toISOString().slice(0,7)});
-const m=mo(),cs=CATS.map(c=>[c,sum(D().expenses.filter(r=>inM(r,m)&&r.category===c))]).filter(x=>x[1]>0);
+const m=mo(),cs=[...new Set(D().expenses.filter(r=>inM(r,m)).map(r=>r.category||'Other'))].map(c=>[c,sum(D().expenses.filter(r=>inM(r,m)&&(r.category||'Other')===c))]);
 return `<div class="ch"><div class="card"><b>Income and expenses</b> <small>blue income, red expenses</small>${bars(ms.map(x=>[x.slice(5),sum(D().income.filter(r=>inM(r,x))),sum(D().expenses.filter(r=>inM(r,x)))]))}</div><div class="card"><b>Spending this month</b>${cs.length?donut(cs):'<br>No data'}</div><div class="card"><b>Account balances</b>${bars(ACCTS.map(a=>[a.split(' ')[0],Math.max(0,bal(a))]))}</div></div>`}
 function unmet(){const u=D().goals.filter(g=>status(g)!=='Achieved').sort((a,b)=>String(a.deadline||'9').localeCompare(String(b.deadline||'9'))).slice(0,5);
 return `<div class="card"><b>Unmet goals</b>${u.map(g=>`<div style="margin-top:6px">${E(g.statement)} <small>balance ${M(Math.max(0,n(g.target)-raised(g)))} | deadline ${g.deadline||'not set'}${g.deadline&&g.deadline<today()?' | overdue':''}</small></div>`).join('')||'<br>All goals met'}</div>`}
@@ -168,6 +173,15 @@ V.search=()=>{const q=S.q.toLowerCase(),h=o=>Object.values(o).join(' ').toLowerC
 const sec=(t,l,a,f)=>a.length?`<div class="card"><b>${l}</b> (${a.length})${a.slice(0,8).map(r=>`<div style="padding:5px 0;cursor:pointer" onclick="go('${t}')">${f(r)}</div>`).join('')}</div>`:'';
 return hd('Search results')+sec('goals','Goals',D().goals.filter(h),g=>E(g.statement)+' '+tag(status(g)))+sec('income','Income',D().income.filter(h),r=>r.date+' '+E(r.source)+' '+M(r.amount))+sec('expenses','Expenses',D().expenses.filter(h),r=>r.date+' '+E(r.purpose)+' '+M(r.amount))+sec('cal','Events',D().events.filter(h),e=>e.date+' '+E(e.title))+sec('users','People',D().users.filter(u=>(u.name+u.id).toLowerCase().includes(q)),u=>U(u.id))||''}
 const view=()=>{$('#vw').innerHTML=(S.q?V.search:V[S.tab])()};
+const dn=id=>(D().debts.find(d=>d.id===id)||{}).creditor||'';
+const debtBal=d=>n(d.amount)+sum(D().income.filter(i=>i.debt===d.id))-sum(D().expenses.filter(e=>e.debt===d.id));
+const st2=(ok,t)=>`<span class="tag ${ok?'ok':''}">${t}</span>`;
+V.debt=()=>hd('Debt','debts')+tb(['Creditor','Date','Elimination date','Amount','Paid','Balance','Status','Recorded by',''],D().debts.map(d=>{const b=debtBal(d);return [E(d.creditor),d.date,d.elim,M(d.amount),M(sum(D().expenses.filter(e=>e.debt===d.id))),M(b),st2(b<=0,b<=0?'Cleared':d.elim&&d.elim<today()?'Overdue':'Active'),U(d.user),act('debts',d.id)]}));
+V.credit=()=>hd('Credit','credits')+tb(['Creditor name','Contact','Amount','Deadline','Status','Recorded by',''],D().credits.map(c=>[E(c.name),E(c.contact),M(c.amount),c.deadline,st2(0,c.deadline&&c.deadline<today()?'Overdue':'Open'),U(c.user),act('credits',c.id)]));
+function debtCard(){const a=D().debts.filter(d=>debtBal(d)>0);return `<div class="card"><b>Debts</b>${a.map(d=>`<div style="margin-top:6px">${E(d.creditor)} <small>balance ${M(debtBal(d))} | clear by ${d.elim||'not set'}</small></div>`).join('')||'<br>No active debt'}</div>`}
+const nd=v=>{v=String(v||'');if(!v||/^\d{4}-\d{2}(-\d{2})?$/.test(v))return v;const d=new Date(v);return isNaN(d)?v:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const fix=d=>[['goals','deadline'],['income','date'],['expenses','date'],['events','date'],['debts','date'],['debts','elim'],['credits','deadline']].forEach(([t,k])=>(d[t]||[]).forEach(r=>r[k]=nd(r[k])));
+function applyQ(){S.Q.forEach(o=>{const a=S.D[o.t];if(!a)return;if(o.o==='s'){const i=a.findIndex(r=>r.id===o.row.id);i<0?a.push(o.row):a[i]=o.row}else S.D[o.t]=a.filter(r=>r.id!==o.id)})}
 function render(){$('#nv').innerHTML=`<div class="logo"><img src="logo.png" alt="LITRICH"></div>`+TABS.map(([k,l])=>`<a class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render()"><svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>${l}</a>`).join('')+`<a onclick="pform()">${av(S.user.username)}${E(nm(S.user.username))}</a><a onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 3H4v18h5M16 8l4 4-4 4M20 12H9"/></svg>Sign out</a><div id="st">${navigator.onLine?'Online':'Offline'}${S.Q.length?' | '+S.Q.length+' pending':''}</div>`;
 view()}
 async function auth(e){e.preventDefault();const f=e.target;try{const r=await call(S.setup?'setup':'login',{username:f.u.value,password:f.p.value,name:f.nm.value,email:f.em.value,code:f.cd.value});
@@ -176,7 +190,7 @@ S.tok=r.token;S.user=r.user;await persist();start()}catch(x){$('#le').textConten
 async function logout(){await idb.set('s',null);await idb.set('trk',0);location.reload()}
 function start(){$('#lg').hidden=true;$('#app').hidden=false;render();sync();rmd();if(S.trk)track(1)}
 (async()=>{const s=await idb.get('s');S.trk=await idb.get('trk')||0;S.rem=await idb.get('rem');
-if(s&&s.tok){Object.assign(S,s);start()}else $('#lg').hidden=false;
+if(s&&s.tok){Object.assign(S,s);S.D={...EMPTY(),...S.D};start()}else $('#lg').hidden=false;
 addEventListener('online',sync);addEventListener('offline',render);setInterval(sync,12e4);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js')})();
 </script></body></html>
