@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LITRICH</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#0f2e5e">
+<link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--b:#1e4f9c;--d:#0f2e5e;--p:#fbe3d6;--r:#c8362f;--g:#f4f6fa;--t:#1d2433}
+*{box-sizing:border-box}body{margin:0;font:13px/1.4 "Segoe UI",Arial,sans-serif;color:var(--t);background:var(--g)}
+#app{display:flex;height:100vh}
+nav{width:200px;background:var(--d);color:#fff;display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:14px;font:700 17px Georgia,serif;letter-spacing:2px;border-bottom:1px solid #ffffff22}.logo span{color:#f6b79a}
+nav a{display:flex;gap:9px;align-items:center;padding:9px 14px;color:#cfd9ee;cursor:pointer;border-left:3px solid transparent}
+nav a.on{background:#ffffff14;color:#fff;border-color:var(--r)}
+svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;flex-shrink:0}
+#st{font-size:11px;padding:10px 14px;color:#9fb2d6;margin-top:auto}
+main{flex:1;overflow:auto;padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+h2{font:600 17px Georgia,serif;margin:0;color:var(--d)}
+.card{background:#fff;border:1px solid #e1e6ef;border-radius:4px;padding:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}.grid .card{margin:0}
+.k{font-size:11px;color:#6b7690;text-transform:uppercase}.v{font:600 18px Georgia,serif;color:var(--b)}
+table{width:100%;border-collapse:collapse}th{background:var(--p);text-align:left;font-size:11px;text-transform:uppercase;color:var(--d)}
+th,td{padding:6px 8px;border-bottom:1px solid #edf0f5;white-space:nowrap}.w{overflow:auto}
+button{font-size:12px;font-family:inherit;padding:5px 10px;border:1px solid var(--b);background:var(--b);color:#fff;border-radius:3px;cursor:pointer}
+button.s{background:#fff;color:var(--b)}button.x{background:#fff;color:var(--r);border-color:var(--r)}
+input,select{font-size:12px;font-family:inherit;padding:6px;border:1px solid #c9d1e0;border-radius:3px;width:100%}
+.top input{width:auto}label{display:block;font-size:11px;color:#6b7690;margin:8px 0 2px}
+.m{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;z-index:9}
+.m>div{background:#fff;padding:16px;width:min(360px,92vw);border-radius:4px;max-height:90vh;overflow:auto}
+.bar{height:5px;background:#e6eaf2;margin-top:4px}.bar i{display:block;height:5px;background:var(--b)}
+.tag{padding:1px 7px;border-radius:8px;font-size:11px;background:var(--p)}.tag.ok{background:var(--b);color:#fff}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e1e6ef}.cg>div{background:#fff;min-height:58px;padding:3px;font-size:11px}
+.cg .h{min-height:0;background:var(--p);font-weight:600}.ev{background:var(--p);margin-top:2px;padding:1px 3px;border-left:2px solid var(--r);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#lg{max-width:320px;margin:12vh auto;padding:0 16px}#lg .logo{color:var(--d);border:0;text-align:center;font-size:24px}#lg .logo span{color:var(--r)}
+#le{color:var(--r);font-size:12px;margin-top:8px;min-height:16px}iframe{width:100%;height:300px;border:1px solid #e1e6ef}
+.logo img{display:block;height:56px;margin:0 auto;background:#fff;border-radius:6px;padding:3px}#lg .logo img{height:150px;background:none}svg.c{width:100%;height:auto;stroke:none}.av{width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle}#sb input{max-width:340px;margin-bottom:12px}.ch{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-bottom:12px}.ch .card{margin:0}
+@media(max-width:700px){#app{flex-direction:column}nav{width:100%;flex-direction:row;overflow-x:auto}.logo,#st{display:none}
+nav a{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}nav a.on{border-color:var(--r)}main{padding:10px}}
+</style></head><body>
+<div id="lg" hidden><div class="logo"><img src="logo.png" alt="LITRICH"></div><div class="card">
+<form onsubmit="auth(event)"><label>Username</label><input name="u" autocomplete="username" required>
+<label>Password</label><input name="p" type="password" autocomplete="current-password" required>
+<div hidden><label>Full name</label><input name="nm"></div><br><button style="width:100%">Continue</button><div id="le"></div></form></div></div>
+<div id="app" hidden><nav id="nv"></nav><main><div id="sb"><input id="q" placeholder="Search goals, income, expenses, events, people" oninput="S.q=this.value;view()"></div><div id="vw"></div></main></div>
+<script>
+const API='PASTE_WEB_APP_URL_HERE';
+const ACCTS=['Regular Saving','Emergency','LITRICH Business','Health & Education','Projects'];
+const CATS=['Food','Health','Education','Transport','Housing','Business','Other'];
+const $=s=>document.querySelector(s);
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const IC={dash:'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',budget:'M12 3a9 9 0 1 0 9 9h-9z',goals:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',cal:'M4 5h16v15H4zM4 10h16M8 3v4M16 3v4',expenses:'M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H7',income:'M12 19V5M5 12l7-7 7 7',accounts:'M3 7h18v12H3zM3 7l3-4h12l3 4',loc:'M12 21s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12zM12 11a2 2 0 1 0 0-4 2 2 0 0 0 0 4',rep:'M6 3h9l4 4v14H6zM9 12h7M9 16h7',users:'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0'};
+const TABS=[['dash','Dashboard'],['budget','Monthly Budget'],['goals','Goals'],['cal','Calendar'],['expenses','Expenses'],['income','Income'],['accounts','Accounts'],['loc','Location'],['rep','Monthly Report'],['users','Users']];
+const F={
+goals:{f:[['statement','Goal'],['category','Category','sel',['General','Health','Education','Business','Project','Emergency']],['target','Budget','number'],['account','Funds account','acct'],['source','Source'],['deadline','Deadline','date']]},
+income:{f:[['amount','Amount','number'],['source','Source'],['account','Account','acct'],['goal','Tied goal','goal'],['date','Date','date']]},
+expenses:{f:[['amount','Amount','number'],['purpose','Purpose'],['category','Category','sel',CATS],['account','Source account','acct'],['goal','Tied goal','goal'],['date','Date','date']]},
+budgets:{f:[['month','Month','month'],['category','Category','sel',CATS],['amount','Planned','number']]},
+events:{f:[['title','Event'],['date','Date','date'],['note','Note']]},
+accounts:{f:[['opening','Opening balance','number']]}};
+const GA={General:'Regular Saving',Health:'Health & Education',Education:'Health & Education',Business:'LITRICH Business',Project:'Projects',Emergency:'Emergency'};
+const EMPTY=()=>({goals:[],income:[],expenses:[],budgets:[],events:[],accounts:[],locations:[],users:[]});
+let S={tab:'dash',D:EMPTY(),Q:[],trk:0},busy=0,bm,cm,sel,wid;
+const mo=()=>new Date().toISOString().slice(0,7),today=()=>new Date().toISOString().slice(0,10);
+bm=cm=mo();
+const D=()=>S.D,n=x=>+x||0,sum=a=>a.reduce((s,r)=>s+n(r.amount),0),M=x=>'$'+n(x).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const inM=(r,m)=>String(r.date||'').slice(0,7)===m;
+const raised=g=>sum(D().income.filter(i=>i.goal===g.id));
+const status=g=>{const r=raised(g);return n(g.target)>0&&r>=n(g.target)?'Achieved':r>0?'In Progress':'Pending'};
+const bal=a=>{const o=D().accounts.find(r=>r.id===a);return n(o&&o.opening)+sum(D().income.filter(r=>r.account===a))-sum(D().expenses.filter(r=>r.account===a))};
+const nm=u=>(D().users.find(x=>x.id===u)||{}).name||u;
+const gn=id=>(D().goals.find(g=>g.id===id)||{}).statement||'';
+const tag=s=>`<span class="tag ${s==='Achieved'?'ok':''}">${s}</span>`;
+const st=t=>{const e=$('#st');if(e)e.textContent=t};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+// local database (IndexedDB) - offline cache and pending queue only
+const idb=(()=>{let p;const o=()=>p||(p=new Promise((r,j)=>{const q=indexedDB.open('litrich',1);q.onupgradeneeded=()=>q.result.createObjectStore('k');q.onsuccess=()=>r(q.result);q.onerror=j}));
+return{get:async k=>{const d=await o();return new Promise(r=>{const q=d.transaction('k').objectStore('k').get(k);q.onsuccess=()=>r(q.result)})},
+set:async(k,v)=>{const d=await o();return new Promise(r=>{const t=d.transaction('k','readwrite');t.objectStore('k').put(v,k);t.oncomplete=r})}}})();
+const persist=()=>idb.set('s',{tok:S.tok,user:S.user,D:S.D,Q:S.Q});
+
+async function call(a,x){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,token:S.tok,...x})});const j=await r.json();if(!j.ok)throw new Error(j.error);return j}
+async function sync(){if(!navigator.onLine||!S.tok||busy)return;busy=1;st('Syncing');
+try{const ops=S.Q.slice();const r=await call('sync',{ops});S.Q=S.Q.slice(ops.length);S.D=r.data;await persist();st('Synced');render();chk();rmd()}
+catch(e){if(/Auth|Expired/.test(e.message))return logout();st('Pending changes: '+S.Q.length)}
+busy=0;if(S.Q.length&&navigator.onLine)setTimeout(sync,3000)}
+async function save(t,row){row.id=row.id||uid();row.user=row.user||S.user.username;const a=D()[t],i=a.findIndex(r=>r.id===row.id);i<0?a.push(row):a[i]=row;S.Q.push({t,o:'s',row});await persist();render();sync()}
+async function rm(t,id){if(!confirm('Delete this record?'))return;S.D[t]=D()[t].filter(r=>r.id!==id);S.Q.push({t,o:'d',id});await persist();render();sync()}
+function chk(){const g=D().goals.find(g=>status(g)==='Achieved'&&!g.done);if(g){g.done='1';save('goals',g);modal(`<h2>Congratulations</h2><p>The goal "${E(g.statement)}" has been fully funded.</p><button onclick="cl()">Close</button>`)}}
+
+function modal(h){const m=document.createElement('div');m.className='m';m.innerHTML='<div>'+h+'</div>';document.body.appendChild(m)}
+const cl=()=>document.querySelectorAll('.m').forEach(e=>e.remove());
+function form(t,id){const c=F[t];if(t==='accounts')id=ACCTS[id];
+const r=(id&&D()[t].find(x=>x.id===id))||(t==='accounts'?{id}:{});
+const fld=([k,l,ty,o])=>{const v=r[k]!=null?r[k]:(ty==='date'?today():ty==='month'?mo():'');let h;
+if(ty==='sel'||ty==='acct'||ty==='goal'){const L=ty==='acct'?ACCTS:ty==='goal'?[['','None'],...D().goals.map(g=>[g.id,g.statement])]:o;
+h=`<select name="${k}">${L.map(x=>{const a=Array.isArray(x)?x:[x,x];return `<option value="${E(a[0])}" ${a[0]===v?'selected':''}>${E(a[1])}</option>`}).join('')}</select>`}
+else h=`<input name="${k}" type="${ty||'text'}" ${ty==='number'?'step="any"':''} value="${E(v)}" ${ty==='number'||!ty?'required':''}>`;
+return `<label>${l}</label>${h}`};
+modal(`<h2>${id?'Edit':'Add'} ${t==='accounts'?id:t.replace(/s$/,'')}</h2><form id="f">${c.f.map(fld).join('')}<br><button>Save</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
+$('#f').onsubmit=e=>{e.preventDefault();const o={...r};c.f.forEach(([k])=>o[k]=e.target[k].value);
+if(t==='accounts')o.id=id;if(t==='budgets')o.id=o.month+'_'+o.category;
+if(t==='goals'&&GA[o.category])o.account=GA[o.category];
+if(t==='income'||t==='expenses'){const g=D().goals.find(x=>x.id===o.goal);if(g)o.account=g.account||o.account}
+cl();save(t,o)}}
+
+// views
+const top=(h,t)=>`<div class="top"><h2>${h}</h2>${t?`<button onclick="form('${t}')">+</button>`:''}</div>`;
+const tb=(h,rows)=>`<div class="card w"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${h.length}">No records</td></tr>`}</table></div>`;
+const act=(t,id)=>`<button class="s" onclick="form('${t}','${id}')">Edit</button> <button class="x" onclick="rm('${t}','${id}')">Delete</button>`;
+const V={
+dash(){const m=mo(),I=sum(D().income.filter(r=>inM(r,m))),X=sum(D().expenses.filter(r=>inM(r,m))),A=D().goals.filter(g=>status(g)==='Achieved').length;
+return top('Dashboard')+`<div class="grid"><div class="card"><div class="k">Total balance</div><div class="v">${M(ACCTS.reduce((s,a)=>s+bal(a),0))}</div></div><div class="card"><div class="k">Income this month</div><div class="v">${M(I)}</div></div><div class="card"><div class="k">Expenses this month</div><div class="v">${M(X)}</div></div><div class="card"><div class="k">Goals achieved</div><div class="v">${A} / ${D().goals.length}</div></div></div>`+charts()+unmet()+
+`<div class="card"><b>Goal progress</b>${D().goals.slice(0,6).map(g=>{const p=n(g.target)?Math.min(100,raised(g)/n(g.target)*100):0;return `<div style="margin-top:8px">${E(g.statement)} <small>${M(raised(g))} of ${M(g.target)}</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')||'No goals yet'}</div>`+
+tb(['Date','Purpose','Amount','By'],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,5).map(r=>[r.date,E(r.purpose),M(r.amount),U(r.user)]))},
+budget(){const rows=CATS.map(c=>{const b=D().budgets.find(x=>x.id===bm+'_'+c),p=n(b&&b.amount),s=sum(D().expenses.filter(r=>inM(r,bm)&&r.category===c)),pc=p?Math.min(100,s/p*100):0;
+return [c,M(p),M(s),`<span style="color:${p-s<0?'var(--r)':'inherit'}">${M(p-s)}</span><div class="bar"><i style="width:${pc}%;background:${s>p?'var(--r)':'var(--b)'}"></i></div>`,b?`<button class="x" onclick="rm('budgets','${b.id}')">Delete</button>`:'']});
+return `<div class="top"><h2>Monthly Budget</h2><span><input type="month" value="${bm}" onchange="bm=this.value;render()"> <button onclick="form('budgets')">+</button></span></div>`+tb(['Category','Planned','Spent','Remaining',''],rows)},
+goals(){return top('Goals','goals')+tb(['Goal','Status','Budget','Achieved','Balance','Source','Funds account','Deadline',''],D().goals.map(g=>[E(g.statement),tag(status(g)),M(g.target),M(raised(g)),M(Math.max(0,n(g.target)-raised(g))),E(g.source),E(g.account),g.deadline||'',act('goals',g.id)]))},
+cal(){const[y,m]=cm.split('-').map(Number),f=new Date(y,m-1,1).getDay(),dn=new Date(y,m,0).getDate();
+const ev=[...D().events.map(e=>({d:e.date,t:e.title})),...D().goals.filter(g=>g.deadline).map(g=>({d:g.deadline,t:'Deadline: '+g.statement}))];
+let c=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="h">${d}</div>`).join('')+'<div></div>'.repeat(f);
+for(let d=1;d<=dn;d++){const ds=cm+'-'+String(d).padStart(2,'0');c+=`<div><b>${d}</b>${ev.filter(x=>x.d===ds).map(x=>`<div class="ev">${E(x.t)}</div>`).join('')}</div>`}
+return `<div class="top"><h2>Calendar</h2><span><button class="s" onclick="cmv(-1)">Prev</button> ${cm} <button class="s" onclick="cmv(1)">Next</button> <button onclick="form('events')">+</button></span></div><div class="card"><div class="cg">${c}</div></div>`+
+tb(['Date','Event','Note',''],D().events.filter(e=>String(e.date).slice(0,7)===cm).sort((a,b)=>a.date>b.date?1:-1).map(e=>[e.date,E(e.title),E(e.note),act('events',e.id)]))},
+expenses(){return top('Expenses','expenses')+tb(['Date','Purpose','Category','Amount','Source account','Tied goal','Recorded by',''],D().expenses.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.purpose),E(r.category),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('expenses',r.id)]))},
+income(){return top('Income','income')+tb(['Date','Source','Amount','Account','Tied goal','Recorded by',''],D().income.slice().sort((a,b)=>b.date>a.date?1:-1).map(r=>[r.date,E(r.source),M(r.amount),E(r.account),E(gn(r.goal)),U(r.user),act('income',r.id)]))},
+accounts(){return top('Accounts')+`<div class="grid">${ACCTS.map((a,i)=>`<div class="card"><div class="k">${a}</div><div class="v">${M(bal(a))}</div><small>Deposits ${M(sum(D().income.filter(r=>r.account===a)))} | Spent ${M(sum(D().expenses.filter(r=>r.account===a)))}</small><br><br><button class="s" onclick="form('accounts',${i})">Opening balance</button></div>`).join('')}</div>`},
+loc(){const L=D().locations,s=L.find(l=>l.id===sel);
+return `<div class="top"><h2>Location Tracker</h2><button class="${S.trk?'x':''}" onclick="track(${S.trk?0:1})">${S.trk?'Stop sharing':'Share my location'}</button></div>`+
+(s?`<div class="card"><iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${n(s.lng)-.01},${n(s.lat)-.01},${n(s.lng)+.01},${n(s.lat)+.01}&marker=${s.lat},${s.lng}"></iframe></div>`:'')+
+tb(['User','Last seen','Coordinates',''],L.map(l=>[U(l.user),new Date(l.time).toLocaleString(),n(l.lat).toFixed(4)+', '+n(l.lng).toFixed(4),`<button class="s" onclick="sel='${l.id}';render()">View</button>`]))},
+rep(){return top('Monthly Report')+`<div class="card">A report is generated automatically on the last day of every month. Download any month:<br><br><input id="rm" type="month" value="${mo()}" style="width:160px"> <button onclick="dl()">Download PDF</button></div>`},
+users(){if(S.user.role!=='admin')return top('Users')+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]));
+return top('Users')+'<div class="top"><button onclick="uform()">+ Add user</button></div>'+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]))}};
+const cmv=d=>{const[y,m]=cm.split('-').map(Number),x=new Date(y,m-1+d,1);cm=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');render()};
+function uform(){modal(`<h2>Add user</h2><form id="uf"><label>Full name</label><input name="name" required><label>Username</label><input name="username" required><label>Email</label><input name="email" type="email"><label>Password (8+ characters)</label><input name="password" type="password" minlength="8" required><label>Role</label><select name="role"><option value="member">Member</option><option value="admin">Admin</option></select><br><button>Create</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
+$('#uf').onsubmit=async e=>{e.preventDefault();const f=e.target;try{await call('addUser',{email:f.email.value,name:f.name.value,username:f.username.value,password:f.password.value,role:f.role.value});cl();sync()}catch(x){alert(x.message)}}}
+async function dl(){st('Preparing report');try{const m=$('#rm').value,r=await call('report',{month:m}),a=document.createElement('a');
+a.href=URL.createObjectURL(new Blob([Uint8Array.from(atob(r.pdf),c=>c.charCodeAt(0))],{type:'application/pdf'}));a.download='LITRICH-Report-'+m+'.pdf';a.click();st('Done')}catch(e){st('Report requires a connection')}}
+async function track(on){if(on){S.trk=1;let last=0;wid=navigator.geolocation.watchPosition(p=>{if(Date.now()-last<12e4)return;last=Date.now();save('locations',{id:S.user.username,lat:p.coords.latitude,lng:p.coords.longitude,time:new Date().toISOString()})},()=>st('Location unavailable'),{enableHighAccuracy:true})}
+else{S.trk=0;navigator.geolocation.clearWatch(wid);S.D.locations=D().locations.filter(r=>r.id!==S.user.username);S.Q.push({t:'locations',o:'d',id:S.user.username});await persist();sync()}await idb.set('trk',S.trk);render()}
+
+function av(u){const x=D().users.find(y=>y.id===u);return x&&x.photo?`<img class="av" src="${x.photo}" alt="">`:`<svg viewBox="0 0 24 24"><path d="${IC.users}"/></svg>`}
+const U=u=>av(u)+' '+E(nm(u));
+const PAL=['#1e4f9c','#c8362f','#f6b79a','#0f2e5e','#6b8fd0','#e58a7c','#9aa7bd'];
+function bars(a){const mx=Math.max(1,...a.flatMap(i=>[i[1],i[2]||0])),w=300/a.length;
+return `<svg class="c" viewBox="0 0 300 140">${a.map((it,i)=>{const x=i*w+w/2-17,h1=it[1]/mx*100,h2=(it[2]||0)/mx*100;
+return `<rect x="${x}" y="${110-h1}" width="16" height="${h1}" fill="#1e4f9c"/><rect x="${x+17}" y="${110-h2}" width="16" height="${h2}" fill="#c8362f"/><text x="${x+17}" y="126" font-size="8" text-anchor="middle" fill="#6b7690">${E(String(it[0]).slice(0,10))}</text>`}).join('')}</svg>`}
+function donut(a){const T=a.reduce((s,i)=>s+i[1],0)||1,C=2*Math.PI*40;let o=0;
+return `<svg class="c" viewBox="0 0 220 110"><g transform="rotate(-90 55 55)">${a.map((it,i)=>{const l=it[1]/T*C,s=`<circle cx="55" cy="55" r="40" fill="none" stroke="${PAL[i%7]}" stroke-width="18" stroke-dasharray="${l} ${C-l}" stroke-dashoffset="${-o}"/>`;o+=l;return s}).join('')}</g>${a.map((it,i)=>`<rect x="125" y="${8+i*14}" width="8" height="8" fill="${PAL[i%7]}"/><text x="137" y="${15+i*14}" font-size="9" fill="#1d2433">${E(it[0])} ${Math.round(it[1]/T*100)}%</text>`).join('')}</svg>`}
+function charts(){const ms=[...Array(6)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-5+i);return d.toISOString().slice(0,7)});
+const m=mo(),cs=CATS.map(c=>[c,sum(D().expenses.filter(r=>inM(r,m)&&r.category===c))]).filter(x=>x[1]>0);
+return `<div class="ch"><div class="card"><b>Income and expenses</b> <small>blue income, red expenses</small>${bars(ms.map(x=>[x.slice(5),sum(D().income.filter(r=>inM(r,x))),sum(D().expenses.filter(r=>inM(r,x)))]))}</div><div class="card"><b>Spending this month</b>${cs.length?donut(cs):'<br>No data'}</div><div class="card"><b>Account balances</b>${bars(ACCTS.map(a=>[a.split(' ')[0],Math.max(0,bal(a))]))}</div></div>`}
+function unmet(){const u=D().goals.filter(g=>status(g)!=='Achieved').sort((a,b)=>String(a.deadline||'9').localeCompare(String(b.deadline||'9'))).slice(0,5);
+return `<div class="card"><b>Unmet goals</b>${u.map(g=>`<div style="margin-top:6px">${E(g.statement)} <small>balance ${M(Math.max(0,n(g.target)-raised(g)))} | deadline ${g.deadline||'not set'}${g.deadline&&g.deadline<today()?' | overdue':''}</small></div>`).join('')||'<br>All goals met'}</div>`}
+function rmd(){const k=today(),d=new Date();if(S.rem===k||!(d.getDate()===15||new Date(d.getTime()+864e5).getDate()===1))return;
+const u=D().goals.filter(g=>status(g)!=='Achieved');if(!u.length)return;S.rem=k;idb.set('rem',k);
+modal(`<h2>Goal reminder</h2>${u.map(g=>`<p>${E(g.statement)}<br><small>Balance ${M(Math.max(0,n(g.target)-raised(g)))} | Deadline ${g.deadline||'not set'}</small></p>`).join('')}<button onclick="cl()">Close</button>`)}
+const shrink=f=>new Promise(r=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=c.height=128;const s=Math.min(i.width,i.height);c.getContext('2d').drawImage(i,(i.width-s)/2,(i.height-s)/2,s,s,0,0,128,128);r(c.toDataURL('image/jpeg',.7))};i.src=URL.createObjectURL(f)});
+function pform(){const u=D().users.find(x=>x.id===S.user.username)||{};
+modal(`<h2>My profile</h2><form id="pf"><div style="text-align:center">${av(u.id)}</div><label>Full name</label><input name="name" value="${E(u.name)}" required><label>Email (for reminders)</label><input name="email" type="email" value="${E(u.email)}"><label>Photo</label><input name="ph" type="file" accept="image/*"><br><button>Save</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
+$('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,fl=f.ph.files[0];try{const photo=fl?await shrink(fl):undefined;await call('profile',{name:f.name.value,email:f.email.value,photo});cl();sync()}catch(x){alert(/fetch/i.test(x.message)?'Connect to the internet to update your profile':x.message)}}}
+const go=t=>{S.tab=t;S.q='';$('#q').value='';render()};
+V.search=()=>{const q=S.q.toLowerCase(),h=o=>Object.values(o).join(' ').toLowerCase().includes(q);
+const sec=(t,l,a,f)=>a.length?`<div class="card"><b>${l}</b> (${a.length})${a.slice(0,8).map(r=>`<div style="padding:5px 0;cursor:pointer" onclick="go('${t}')">${f(r)}</div>`).join('')}</div>`:'';
+return top('Search results')+sec('goals','Goals',D().goals.filter(h),g=>E(g.statement)+' '+tag(status(g)))+sec('income','Income',D().income.filter(h),r=>r.date+' '+E(r.source)+' '+M(r.amount))+sec('expenses','Expenses',D().expenses.filter(h),r=>r.date+' '+E(r.purpose)+' '+M(r.amount))+sec('cal','Events',D().events.filter(h),e=>e.date+' '+E(e.title))+sec('users','People',D().users.filter(u=>(u.name+u.id).toLowerCase().includes(q)),u=>U(u.id))||''}
+const view=()=>{$('#vw').innerHTML=(S.q?V.search:V[S.tab])()};
+function render(){$('#nv').innerHTML=`<div class="logo"><img src="logo.png" alt="LITRICH"></div>`+TABS.map(([k,l])=>`<a class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render()"><svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>${l}</a>`).join('')+`<a onclick="pform()">${av(S.user.username)}${E(nm(S.user.username))}</a><a onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 3H4v18h5M16 8l4 4-4 4M20 12H9"/></svg>Sign out</a><div id="st">${navigator.onLine?'Online':'Offline'}${S.Q.length?' | '+S.Q.length+' pending':''}</div>`;
+view()}
+async function auth(e){e.preventDefault();const f=e.target;try{const r=await call(S.setup?'setup':'login',{username:f.u.value,password:f.p.value,name:f.nm.value});
+if(r.setup){S.setup=1;f.nm.parentNode.hidden=false;$('#le').textContent='No accounts yet. Enter your name to create the administrator (password 8+ characters).';return}
+S.tok=r.token;S.user=r.user;await persist();start()}catch(x){$('#le').textContent=/fetch/i.test(x.message)?'No connection':x.message}}
+async function logout(){await idb.set('s',null);await idb.set('trk',0);location.reload()}
+function start(){$('#lg').hidden=true;$('#app').hidden=false;render();sync();rmd();if(S.trk)track(1)}
+(async()=>{const s=await idb.get('s');S.trk=await idb.get('trk')||0;S.rem=await idb.get('rem');
+if(s&&s.tok){Object.assign(S,s);start()}else $('#lg').hidden=false;
+addEventListener('online',sync);addEventListener('offline',render);setInterval(sync,12e4);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js')})();
+</script></body></html>
