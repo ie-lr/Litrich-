@@ -42,10 +42,10 @@ nav a{border-left:0;border-bottom:3px solid transparent;white-space:nowrap}nav a
 <div id="lg" hidden><div class="logo"><img src="logo.png" alt="LITRICH"></div><div class="card">
 <form onsubmit="auth(event)"><label>Username</label><input name="u" autocomplete="username" required>
 <label>Password</label><input name="p" type="password" autocomplete="current-password" required>
-<div hidden><label>Full name</label><input name="nm"></div><br><button style="width:100%">Continue</button><div id="le"></div></form></div></div>
+<div id="sx" hidden><label>Full name</label><input name="nm"><label>Email</label><input name="em" type="email"><label>Setup code</label><input name="cd" autocomplete="off"></div><br><button id="lb" style="width:100%">Sign in</button><div id="le"></div><div style="font-size:11px;color:#6b7690;margin-top:6px">New members are added by the administrator.</div></form></div></div>
 <div id="app" hidden><nav id="nv"></nav><main><div id="sb"><input id="q" placeholder="Search goals, income, expenses, events, people" oninput="S.q=this.value;view()"></div><div id="vw"></div></main></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbz5zx1d1kz6eeQ-ZTtgTZp7Kj4SU7WEvCFbRkYMe3YONRQAdJV0zt0bo-bt_akuFHkB/exec;'
+const API='https://script.google.com/macros/s/AKfycbz5zx1d1kz6eeQ-ZTtgTZp7Kj4SU7WEvCFbRkYMe3YONRQAdJV0zt0bo-bt_akuFHkB/exec';
 const ACCTS=['Regular Saving','Emergency','LITRICH Business','Health & Education','Projects'];
 const CATS=['Food','Health','Education','Transport','Housing','Business','Other'];
 const $=s=>document.querySelector(s);
@@ -81,7 +81,7 @@ return{get:async k=>{const d=await o();return new Promise(r=>{const q=d.transact
 set:async(k,v)=>{const d=await o();return new Promise(r=>{const t=d.transaction('k','readwrite');t.objectStore('k').put(v,k);t.oncomplete=r})}}})();
 const persist=()=>idb.set('s',{tok:S.tok,user:S.user,D:S.D,Q:S.Q});
 
-async function call(a,x){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,token:S.tok,...x})});const j=await r.json();if(!j.ok)throw new Error(j.error);return j}
+async function call(a,x){const r=await fetch(API,{method:'POST',body:JSON.stringify({a,token:S.tok,...x})});let j;try{j=JSON.parse(await r.text())}catch(e){throw new Error('Backend not reachable. Check the Web App URL (ends in /exec) and that access is set to Anyone')}if(!j.ok)throw new Error(j.error);return j}
 async function sync(){if(!navigator.onLine||!S.tok||busy)return;busy=1;st('Syncing');
 try{const ops=S.Q.slice();const r=await call('sync',{ops});S.Q=S.Q.slice(ops.length);S.D=r.data;await persist();st('Synced');render();chk();rmd()}
 catch(e){if(/Auth|Expired/.test(e.message))return logout();st('Pending changes: '+S.Q.length)}
@@ -136,7 +136,7 @@ rep(){return hd('Monthly Report')+`<div class="card">A report is generated autom
 users(){if(S.user.role!=='admin')return hd('Users')+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]));
 return hd('Users')+'<div class="top"><button onclick="uform()">+ Add user</button></div>'+tb(['Name','Username','Role'],D().users.map(u=>[av(u.id)+' '+E(u.name),E(u.id),u.role]))}};
 const cmv=d=>{const[y,m]=cm.split('-').map(Number),x=new Date(y,m-1+d,1);cm=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');render()};
-function uform(){modal(`<h2>Add user</h2><form id="uf"><label>Full name</label><input name="name" required><label>Username</label><input name="username" required><label>Email</label><input name="email" type="email"><label>Password (8+ characters)</label><input name="password" type="password" minlength="8" required><label>Role</label><select name="role"><option value="member">Member</option><option value="admin">Admin</option></select><br><button>Create</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
+function uform(){modal(`<h2>Add user</h2><form id="uf"><label>Full name</label><input name="name" required><label>Username</label><input name="username" required><label>Email (login details are sent here)</label><input name="email" type="email" required><label>Temporary password (8+ characters)</label><input name="password" type="password" minlength="8" required><label>Role</label><select name="role"><option value="member">Member</option><option value="admin">Admin</option></select><br><button>Create</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
 $('#uf').onsubmit=async e=>{e.preventDefault();const f=e.target;try{await call('addUser',{email:f.email.value,name:f.name.value,username:f.username.value,password:f.password.value,role:f.role.value});cl();sync()}catch(x){alert(x.message)}}}
 async function dl(){st('Preparing report');try{const m=$('#rm').value,r=await call('report',{month:m}),a=document.createElement('a');
 a.href=URL.createObjectURL(new Blob([Uint8Array.from(atob(r.pdf),c=>c.charCodeAt(0))],{type:'application/pdf'}));a.download='LITRICH-Report-'+m+'.pdf';a.click();st('Done')}catch(e){st('Report requires a connection')}}
@@ -161,8 +161,8 @@ const u=D().goals.filter(g=>status(g)!=='Achieved');if(!u.length)return;S.rem=k;
 modal(`<h2>Goal reminder</h2>${u.map(g=>`<p>${E(g.statement)}<br><small>Balance ${M(Math.max(0,n(g.target)-raised(g)))} | Deadline ${g.deadline||'not set'}</small></p>`).join('')}<button onclick="cl()">Close</button>`)}
 const shrink=f=>new Promise(r=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=c.height=128;const s=Math.min(i.width,i.height);c.getContext('2d').drawImage(i,(i.width-s)/2,(i.height-s)/2,s,s,0,0,128,128);r(c.toDataURL('image/jpeg',.7))};i.src=URL.createObjectURL(f)});
 function pform(){const u=D().users.find(x=>x.id===S.user.username)||{};
-modal(`<h2>My profile</h2><form id="pf"><div style="text-align:center">${av(u.id)}</div><label>Full name</label><input name="name" value="${E(u.name)}" required><label>Email (for reminders)</label><input name="email" type="email" value="${E(u.email)}"><label>Photo</label><input name="ph" type="file" accept="image/*"><br><button>Save</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
-$('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,fl=f.ph.files[0];try{const photo=fl?await shrink(fl):undefined;await call('profile',{name:f.name.value,email:f.email.value,photo});cl();sync()}catch(x){alert(/fetch/i.test(x.message)?'Connect to the internet to update your profile':x.message)}}}
+modal(`<h2>My profile</h2><form id="pf"><div style="text-align:center">${av(u.id)}</div><label>Full name</label><input name="name" value="${E(u.name)}" required><label>Email (for reminders)</label><input name="email" type="email" value="${E(u.email)}"><label>New password (optional, 8+ characters)</label><input name="pw" type="password" minlength="8"><label>Photo</label><input name="ph" type="file" accept="image/*"><br><button>Save</button> <button type="button" class="s" onclick="cl()">Cancel</button></form>`);
+$('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,fl=f.ph.files[0];try{const photo=fl?await shrink(fl):undefined;await call('profile',{name:f.name.value,email:f.email.value,photo,password:f.pw.value});cl();sync()}catch(x){alert(/fetch/i.test(x.message)?'Connect to the internet to update your profile':x.message)}}}
 const go=t=>{S.tab=t;S.q='';$('#q').value='';render()};
 V.search=()=>{const q=S.q.toLowerCase(),h=o=>Object.values(o).join(' ').toLowerCase().includes(q);
 const sec=(t,l,a,f)=>a.length?`<div class="card"><b>${l}</b> (${a.length})${a.slice(0,8).map(r=>`<div style="padding:5px 0;cursor:pointer" onclick="go('${t}')">${f(r)}</div>`).join('')}</div>`:'';
@@ -170,8 +170,8 @@ return hd('Search results')+sec('goals','Goals',D().goals.filter(h),g=>E(g.state
 const view=()=>{$('#vw').innerHTML=(S.q?V.search:V[S.tab])()};
 function render(){$('#nv').innerHTML=`<div class="logo"><img src="logo.png" alt="LITRICH"></div>`+TABS.map(([k,l])=>`<a class="${S.tab===k?'on':''}" onclick="S.tab='${k}';render()"><svg viewBox="0 0 24 24"><path d="${IC[k]}"/></svg>${l}</a>`).join('')+`<a onclick="pform()">${av(S.user.username)}${E(nm(S.user.username))}</a><a onclick="logout()"><svg viewBox="0 0 24 24"><path d="M9 3H4v18h5M16 8l4 4-4 4M20 12H9"/></svg>Sign out</a><div id="st">${navigator.onLine?'Online':'Offline'}${S.Q.length?' | '+S.Q.length+' pending':''}</div>`;
 view()}
-async function auth(e){e.preventDefault();const f=e.target;try{const r=await call(S.setup?'setup':'login',{username:f.u.value,password:f.p.value,name:f.nm.value});
-if(r.setup){S.setup=1;f.nm.parentNode.hidden=false;$('#le').textContent='No accounts yet. Enter your name to create the administrator (password 8+ characters).';return}
+async function auth(e){e.preventDefault();const f=e.target;try{const r=await call(S.setup?'setup':'login',{username:f.u.value,password:f.p.value,name:f.nm.value,email:f.em.value,code:f.cd.value});
+if(r.setup){S.setup=1;$('#sx').hidden=false;f.nm.required=f.em.required=f.cd.required=true;$('#lb').textContent='Create administrator account';$('#le').textContent='First-time setup. Enter your name, email and the setup code, then tap again.';return}
 S.tok=r.token;S.user=r.user;await persist();start()}catch(x){$('#le').textContent=/fetch/i.test(x.message)?'No connection':x.message}}
 async function logout(){await idb.set('s',null);await idb.set('trk',0);location.reload()}
 function start(){$('#lg').hidden=true;$('#app').hidden=false;render();sync();rmd();if(S.trk)track(1)}
